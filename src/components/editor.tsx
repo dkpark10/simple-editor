@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   setLastPosCaret,
   getContentByMiddleEnter,
-  // deleteMiddleContent,
+  deleteMiddleContent,
   getCaretPos,
   setCaretPos,
   checkEndCaretPos,
@@ -44,7 +44,10 @@ export default function Editor() {
         contentTextRef.current.push('');
       } else {
         const nextRow = currentRow + 1;
-        const { newBlockContent, blockContents } = getContentByMiddleEnter(contentTextRef.current, nextRow);
+        const { newBlockContent, blockContents } = getContentByMiddleEnter(
+          contentTextRef.current,
+          nextRow
+        );
         contentTextRef.current = blockContents;
         setEditorBlock(newBlockContent);
         setCurrentRow(nextRow);
@@ -66,13 +69,17 @@ export default function Editor() {
       setLastKeyInput('ArrowUp');
     } 
     // else if(e.key === 'Backspace') {
-    //   if (contentTextRef.current[currentRow] === '' && currentRow <= 0) return;
+    //   if (currentRow <= 0) return;
 
     //   if (contentTextRef.current[currentRow] === '') {
     //     const nextRow = currentRow - 1;
-    //     const newBlockContent = deleteMiddleContent(contentBlock, currentRow);
+    //     const { newBlockContent, blockContents } = deleteMiddleContent(
+    //       contentTextRef.current,
+    //       currentRow
+    //     );
 
-    //     setContentBlock(newBlockContent);
+    //     contentTextRef.current = blockContents;
+    //     setEditorBlock(newBlockContent);
     //     setCurrentRow(nextRow);
     //   }
     //   setLastKeyInput('Backspace');
@@ -80,22 +87,15 @@ export default function Editor() {
   }
 
   const onInput = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    // const newContentBlock = [...contentBlock];
-    // newContentBlock[currentRow].content = e.currentTarget.textContent as string;
-    // setContentBlock(newContentBlock);
     contentTextRef.current[currentRow] = e.currentTarget.textContent || "";
   };
-
-  /** @desc 매번 키 입력 시 해당 줄의 엘리먼트 커서를 뒤로 보내줘야 한다. */
-  useEffect(() => {
-    /** @desc 중간에서 지우고 있을 시 커서 위치는 뒤로 보내서는 안된다. */
-    setLastPosCaret(editorElementRef.current[currentRow]);
-  });
 
   useEffect(() => {
     if (lastKeyInput === 'Enter') {
       editorElementRef.current[currentRow].focus();
     } else if (lastKeyInput === 'ArrowDown' || lastKeyInput === 'ArrowUp') {
+      editorElementRef.current[currentRow].focus();
+    } else if(lastKeyInput === "Backspace") {
       editorElementRef.current[currentRow].focus();
     }
   }, [currentRow, lastKeyInput]);

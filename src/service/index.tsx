@@ -22,9 +22,9 @@ export const getContentByMiddleEnter = (contentText: Array<string>, middleRow: n
   const totalLen = contentText.length + 1;
 
   const blockContents = [
-    ...contentText.slice(0, middleRow),
+    ...contentText.slice(0, middleRow - 1),
     "",
-    ...contentText.slice(middleRow),
+    ...contentText.slice(middleRow - 1),
   ];
 
   const newBlockContent: Array<ContentState> = Array.from(
@@ -37,28 +37,30 @@ export const getContentByMiddleEnter = (contentText: Array<string>, middleRow: n
   return {
     newBlockContent,
     blockContents,
-  }
+  };
 }
 
 // /** @desc 중간 블록에서 백스페이스시 해당 블록을 삭제하고 컨텐츠를 반환하는 함수 */
-// export const deleteMiddleContent = (oldContentBlock: Array<ContentState>, middleRow: number) => {
-//   const totalLen = oldContentBlock.length - 1;
+export const deleteMiddleContent = (contentText: Array<string>, middleRow: number) => {
+  const totalLen = contentText.length - 1;
 
-//   const blockContents = [
-//     ...oldContentBlock.slice(0, middleRow).map(({ content }) => content),
-//     ...oldContentBlock.slice(middleRow + 1).map(({ content }) => content),
-//   ];
+  const blockContents = [
+    ...contentText.slice(0, middleRow),
+    ...contentText.slice(middleRow + 1),
+  ];
 
-//   const newBlockContent: Array<ContentState> = Array.from(
-//     { length: totalLen },
-//     (_, idx) => ({
-//       id: idx,
-//       content: blockContents[idx],
-//     })
-//   ); 
+  const newBlockContent: Array<ContentState> = Array.from(
+    { length: totalLen },
+    (_, idx) => ({
+      id: idx,
+    })
+  ); 
 
-//   return newBlockContent;
-// }
+  return {
+    newBlockContent,
+    blockContents,
+  };
+}
 
 /** @desc 커서 위치정보를 얻는 함수 */
 export const getCaretPos = (element: HTMLDivElement) => {
