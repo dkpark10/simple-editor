@@ -2,6 +2,11 @@ export interface ContentState {
   id: number;
 }
 
+export const lastCheckKorean = (text: string) => {
+  const regExp = /[ㄱ-ㅎㅏ-ㅣ가-힣]/g; 
+  return regExp.test(text);
+}
+
 export const setLastPosCaret = (element: HTMLElement | null) => {
   if (!element || element.innerText.length === 0) {
     element?.focus();

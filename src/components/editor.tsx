@@ -6,9 +6,10 @@ import {
   getCaretPos,
   setCaretPos,
   checkEndCaretPos,
+  lastCheckKorean,
   type ContentState,
 } from "@/service";
-import { v4 as uuidv4 } from "uuid";
+import debounce from 'lodash-es/debounce';
 import styles from "@/styles/editor.module.scss";
 
 type KeyInput = 'Enter' | 'ArrowUp' | 'ArrowDown' | 'Backspace' | '';
@@ -23,24 +24,31 @@ export default function Editor() {
   const [currentRow, setCurrentRow] = useState(0);
 
   const [lastKeyInput, setLastKeyInput] = useState<KeyInput>('');
-
+  
   const editorElementRef = useRef<Array<HTMLDivElement>>([]);
 
   const contentTextRef = useRef<Array<string>>([]);
 
-  const onkeydown = (e: React.KeyboardEvent) => {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    contentTextRef.current[currentRow] = e.currentTarget.textContent || "";
     const isEndBlock = currentRow >= editorBlock.length - 1;
 
     if (e.key === 'Enter') {
       e.preventDefault();
+      
       if (isEndBlock) {
-        setCurrentRow(prev => prev + 1);
-        setEditorBlock((prev): Array<ContentState> => [
-          ...prev,
-          {
-            id: prev.length,
-          },
-        ]);
+        /** @desc 한글 두번 입력을 막기 위한 로직 */
+        if (e.nativeEvent.isComposing) return;
+        setCurrentRow(currentRow + 1);
+        setEditorBlock(
+          (prev): Array<ContentState> => [
+            ...prev,
+            {
+              id: prev.length,
+            },
+          ]
+        );
+
         contentTextRef.current.push('');
       } else {
         const nextRow = currentRow + 1;
@@ -48,6 +56,7 @@ export default function Editor() {
           contentTextRef.current,
           nextRow
         );
+
         contentTextRef.current = blockContents;
         setEditorBlock(newBlockContent);
         setCurrentRow(nextRow);
@@ -67,36 +76,27 @@ export default function Editor() {
       }
       setCurrentRow(prev => prev - 1);
       setLastKeyInput('ArrowUp');
-    } 
-    // else if(e.key === 'Backspace') {
-    //   if (currentRow <= 0) return;
+    } else if(e.key === 'Backspace') {
+      if (contentTextRef.current[currentRow] === '' && currentRow >= 1) {
+        const nextRow = currentRow - 1;
+        const { newBlockContent, blockContents } = deleteMiddleContent(
+          contentTextRef.current,
+          currentRow
+        );
 
-    //   if (contentTextRef.current[currentRow] === '') {
-    //     const nextRow = currentRow - 1;
-    //     const { newBlockContent, blockContents } = deleteMiddleContent(
-    //       contentTextRef.current,
-    //       currentRow
-    //     );
-
-    //     contentTextRef.current = blockContents;
-    //     setEditorBlock(newBlockContent);
-    //     setCurrentRow(nextRow);
-    //   }
-    //   setLastKeyInput('Backspace');
-    // }
+        contentTextRef.current = blockContents;
+        setEditorBlock(newBlockContent);
+        setCurrentRow(nextRow);
+      }
+      setLastKeyInput('Backspace');
+    }
   }
 
-  const onInput = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    contentTextRef.current[currentRow] = e.currentTarget.textContent || "";
-  };
-
   useEffect(() => {
-    if (lastKeyInput === 'Enter') {
-      editorElementRef.current[currentRow].focus();
-    } else if (lastKeyInput === 'ArrowDown' || lastKeyInput === 'ArrowUp') {
-      editorElementRef.current[currentRow].focus();
-    } else if(lastKeyInput === "Backspace") {
-      editorElementRef.current[currentRow].focus();
+    editorElementRef.current[currentRow].focus();
+    if (lastKeyInput === "Enter") {
+    } else if (lastKeyInput === 'Backspace') {
+      setLastPosCaret(editorElementRef.current[currentRow]);
     }
   }, [currentRow, lastKeyInput]);
 
@@ -111,8 +111,7 @@ export default function Editor() {
             if (!element) return;
             editorElementRef.current[idx] = element;
           }} 
-          onKeyDown={onkeydown}
-          onInput={onInput}
+          onKeyDown={onKeyDown}
           onFocus={() => setCurrentRow(idx)}
           dangerouslySetInnerHTML={{ __html: contentTextRef.current[idx] }}
         />
