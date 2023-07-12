@@ -21,7 +21,7 @@ export default function Editor() {
       setLastKeyInput('Enter');
     } else if (e.key === 'ArrowDown') {
       /** @desc 끝이면 */
-      if (currentRow >= contentBlock.length) {
+      if (currentRow >= contentBlock.length - 1) {
         return;
       }
       setCurrentRow(prev => prev + 1);
