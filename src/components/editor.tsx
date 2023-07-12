@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import styles from "@/styles/editor.module.scss";
 
-type KeyInput = 'Enter' | 'ArrowUp' | 'ArrowDown' | '';
+type KeyInput = 'Enter' | 'ArrowUp' | 'ArrowDown' | 'Backspace' | '';
 
 export default function Editor() {
   const [contentBlock, setContentBlock] = useState([0]);
@@ -19,11 +19,27 @@ export default function Editor() {
       setCurrentRow(prev => prev + 1);
       setContentBlock(prev => [...prev, prev.length + 1]);
       setLastKeyInput('Enter');
+    } else if (e.key === 'ArrowDown') {
+      /** @desc 끝이면 */
+      if (currentRow >= contentBlock.length) {
+        return;
+      }
+      setCurrentRow(prev => prev + 1);
+      setLastKeyInput('ArrowDown');
+    } else if (e.key === 'ArrowUp') {
+      /** @desc 처음이면 */
+      if (currentRow <= 0) {
+        return;
+      }
+      setCurrentRow(prev => prev - 1);
+      setLastKeyInput('ArrowUp');
     }
   }
 
   useEffect(() => {
     if (lastKeyInput === 'Enter') {
+      blockRef.current[currentRow].focus();
+    } else if (lastKeyInput === 'ArrowDown' || lastKeyInput === 'ArrowUp') {
       blockRef.current[currentRow].focus();
     }
   }, [currentRow, lastKeyInput]);
@@ -40,6 +56,7 @@ export default function Editor() {
             blockRef.current[idx] = element;
           }} 
           onKeyDown={onkeydown}
+          onFocus={() => setCurrentRow(idx)}
         />
       ))}
     </main>
