@@ -1,12 +1,10 @@
 export interface ContentState {
   id: number;
-  content: string;
 }
 
 export const setLastPosCaret = (element: HTMLElement | null) => {
-  if (!element) return;
-  if (element.innerText.length === 0) {
-    element.focus();
+  if (!element || element.innerText.length === 0) {
+    element?.focus();
     return;
   }
  
@@ -19,20 +17,85 @@ export const setLastPosCaret = (element: HTMLElement | null) => {
   selection?.addRange(newRange);
 };
 
-/** 중간 블록에서 엔터시 블록에 들어칼 컨텐츠를 새로 만들고 반환하는 함수 */
-export const insertMiddleContent = (oldContentBlock: Array<ContentState>, middleRow: number) => {
-  const totalLen = oldContentBlock.length + 1;
+/** @desc 중간 블록에서 엔터시 블록에 들어칼 컨텐츠를 새로 만들고 반환하는 함수 */
+export const getContentByMiddleEnter = (contentText: Array<string>, middleRow: number) => {
+  const totalLen = contentText.length + 1;
 
   const blockContents = [
-    ...oldContentBlock.slice(0, middleRow).map(({ content }) => content),
+    ...contentText.slice(0, middleRow),
     "",
-    ...oldContentBlock.slice(middleRow).map(({ content }) => content),
+    ...contentText.slice(middleRow),
   ];
 
-  const newBlockContent: Array<ContentState> = Array.from({ length: totalLen }, (_, idx) => ({
-    id: idx,
-    content: blockContents[idx],
-  })); 
+  const newBlockContent: Array<ContentState> = Array.from(
+    { length: totalLen },
+    (_, idx) => ({
+      id: idx,
+    })
+  ); 
 
-  return newBlockContent;
+  return {
+    newBlockContent,
+    blockContents,
+  }
 }
+
+// /** @desc 중간 블록에서 백스페이스시 해당 블록을 삭제하고 컨텐츠를 반환하는 함수 */
+// export const deleteMiddleContent = (oldContentBlock: Array<ContentState>, middleRow: number) => {
+//   const totalLen = oldContentBlock.length - 1;
+
+//   const blockContents = [
+//     ...oldContentBlock.slice(0, middleRow).map(({ content }) => content),
+//     ...oldContentBlock.slice(middleRow + 1).map(({ content }) => content),
+//   ];
+
+//   const newBlockContent: Array<ContentState> = Array.from(
+//     { length: totalLen },
+//     (_, idx) => ({
+//       id: idx,
+//       content: blockContents[idx],
+//     })
+//   ); 
+
+//   return newBlockContent;
+// }
+
+/** @desc 커서 위치정보를 얻는 함수 */
+export const getCaretPos = (element: HTMLDivElement) => {
+  if (typeof window === 'undefined' || !Object.prototype.hasOwnProperty.call(window, 'getSelection')) {
+    return;
+  }
+
+  const selection = window.getSelection();
+  /** @description 커서 포커스 없을 때 */
+  if (selection?.type === 'None') {
+    return;
+  }
+  const range = window.getSelection()?.getRangeAt(0);  
+  const preCaretRange = range?.cloneRange();
+  
+  if (!selection?.rangeCount || !preCaretRange || !range) return;
+
+  preCaretRange.selectNodeContents(element);
+  preCaretRange.setEnd(range.endContainer, range.endOffset);
+  return preCaretRange.toString().length;
+}
+
+export const checkEndCaretPos = (element: HTMLDivElement, caretPos: number) => {
+  const content = element.innerText.split('\n').join('');
+  return caretPos === content.length;
+};
+
+export const setCaretPos = (element: HTMLDivElement) => {
+  const range = document.createRange();
+  const sel = window.getSelection();
+
+  const pos = getCaretPos(element);
+  if (!pos) return;
+
+  range.setStart(element, pos);
+  range.collapse(true);
+  sel?.removeAllRanges();
+  sel?.addRange(range);
+  element.focus();
+};

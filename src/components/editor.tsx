@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   setLastPosCaret,
-  insertMiddleContent,
+  getContentByMiddleEnter,
+  // deleteMiddleContent,
+  getCaretPos,
+  setCaretPos,
+  checkEndCaretPos,
   type ContentState,
 } from "@/service";
 import { v4 as uuidv4 } from "uuid";
@@ -10,10 +14,9 @@ import styles from "@/styles/editor.module.scss";
 type KeyInput = 'Enter' | 'ArrowUp' | 'ArrowDown' | 'Backspace' | '';
 
 export default function Editor() {
-  const [contentBlock, setContentBlock] = useState<Array<ContentState>>([
+  const [editorBlock, setEditorBlock] = useState<Array<ContentState>>([
     {
       id: 0,
-      content: "",
     },
   ]);
 
@@ -21,29 +24,29 @@ export default function Editor() {
 
   const [lastKeyInput, setLastKeyInput] = useState<KeyInput>('');
 
-  const blockRef = useRef<Array<HTMLDivElement>>([]);
+  const editorElementRef = useRef<Array<HTMLDivElement>>([]);
 
-  const editorRef = useRef<HTMLDivElement | null>(null);
-
-  const isEndBlock = currentRow >= contentBlock.length - 1;
+  const contentTextRef = useRef<Array<string>>([]);
 
   const onkeydown = (e: React.KeyboardEvent) => {
+    const isEndBlock = currentRow >= editorBlock.length - 1;
+
     if (e.key === 'Enter') {
       e.preventDefault();
       if (isEndBlock) {
         setCurrentRow(prev => prev + 1);
-        setContentBlock((prev) => [
+        setEditorBlock((prev): Array<ContentState> => [
           ...prev,
           {
             id: prev.length,
-            content: "",
           },
         ]);
+        contentTextRef.current.push('');
       } else {
         const nextRow = currentRow + 1;
-        const newBlockContent = insertMiddleContent(contentBlock, nextRow);
-
-        setContentBlock(newBlockContent);
+        const { newBlockContent, blockContents } = getContentByMiddleEnter(contentTextRef.current, nextRow);
+        contentTextRef.current = blockContents;
+        setEditorBlock(newBlockContent);
         setCurrentRow(nextRow);
       }
 
@@ -61,43 +64,57 @@ export default function Editor() {
       }
       setCurrentRow(prev => prev - 1);
       setLastKeyInput('ArrowUp');
-    }
+    } 
+    // else if(e.key === 'Backspace') {
+    //   if (contentTextRef.current[currentRow] === '' && currentRow <= 0) return;
+
+    //   if (contentTextRef.current[currentRow] === '') {
+    //     const nextRow = currentRow - 1;
+    //     const newBlockContent = deleteMiddleContent(contentBlock, currentRow);
+
+    //     setContentBlock(newBlockContent);
+    //     setCurrentRow(nextRow);
+    //   }
+    //   setLastKeyInput('Backspace');
+    // }
   }
 
   const onInput = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const newContentBlock = [...contentBlock];
-    newContentBlock[currentRow].content = e.currentTarget.textContent || '';
-    setContentBlock(newContentBlock);
+    // const newContentBlock = [...contentBlock];
+    // newContentBlock[currentRow].content = e.currentTarget.textContent as string;
+    // setContentBlock(newContentBlock);
+    contentTextRef.current[currentRow] = e.currentTarget.textContent || "";
   };
 
-  /** @desc 매번 글 작성시 해당 줄의 엘리먼트 커서를 뒤로 보내줘야 한다. */
+  /** @desc 매번 키 입력 시 해당 줄의 엘리먼트 커서를 뒤로 보내줘야 한다. */
   useEffect(() => {
-    setLastPosCaret(blockRef.current[currentRow]);
-  })
+    /** @desc 중간에서 지우고 있을 시 커서 위치는 뒤로 보내서는 안된다. */
+    setLastPosCaret(editorElementRef.current[currentRow]);
+  });
 
   useEffect(() => {
     if (lastKeyInput === 'Enter') {
-      blockRef.current[currentRow].focus();
+      editorElementRef.current[currentRow].focus();
     } else if (lastKeyInput === 'ArrowDown' || lastKeyInput === 'ArrowUp') {
-      blockRef.current[currentRow].focus();
+      editorElementRef.current[currentRow].focus();
     }
   }, [currentRow, lastKeyInput]);
 
   return (
-    <main ref={editorRef} className={styles["container"]}>
-      {contentBlock.map((block, idx) => (
+    <main className={styles["container"]}>
+      {editorBlock.map((block, idx) => (
         <div 
           className={[styles['content'], block.id].join(' ')}
           key={block.id} 
           contentEditable 
           ref={(element) => {
             if (!element) return;
-            blockRef.current[idx] = element;
+            editorElementRef.current[idx] = element;
           }} 
           onKeyDown={onkeydown}
           onInput={onInput}
           onFocus={() => setCurrentRow(idx)}
-          dangerouslySetInnerHTML={{ __html: block.content }}
+          dangerouslySetInnerHTML={{ __html: contentTextRef.current[idx] }}
         />
       ))}
     </main>
