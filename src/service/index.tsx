@@ -20,6 +20,7 @@ export const setLastPosCaret = (element: HTMLElement | null) => {
   newRange.collapse(false);
   selection?.removeAllRanges();
   selection?.addRange(newRange);
+  element?.focus();
 };
 
 /** @desc 중간 블록에서 엔터시 블록에 들어칼 컨텐츠를 새로 만들고 반환하는 함수 */
