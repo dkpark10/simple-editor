@@ -54,7 +54,7 @@ export default function Editor() {
       if (isEndBlock) {
         /** @desc 한글 두번 입력되는 이슈를 막기 위한 로직 */
         if (e.nativeEvent.isComposing) return;
-        const caretPos = getCaretPos(editorElementRef.current[currentRow]);
+        const { caretPos } = getCaretPos(editorElementRef.current[currentRow]);
 
         if (caretPos === undefined) return;
         /** @desc 처음 or 마지막 캐럿 위치라면 */

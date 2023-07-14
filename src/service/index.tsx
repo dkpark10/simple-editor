@@ -70,23 +70,32 @@ export const deleteMiddleContent = (contentText: Array<string>, middleRow: numbe
 
 /** @desc 커서 위치정보를 얻는 함수 */
 export const getCaretPos = (element: HTMLDivElement) => {
+  const initValue = {
+    caretPos: 0,
+    isFirstLine: true,
+  }
   if (typeof window === 'undefined' || !Object.prototype.hasOwnProperty.call(window, 'getSelection')) {
-    return 0;
+    return initValue;
   }
 
   const selection = window.getSelection();
   /** @description 커서 포커스 없을 때 */
   if (selection?.type === 'None') {
-    return 0;
+    return initValue;
   }
   const range = window.getSelection()?.getRangeAt(0);  
   const preCaretRange = range?.cloneRange();
   
-  if (!selection?.rangeCount || !preCaretRange || !range) return 0;
+  if (!selection?.rangeCount || !preCaretRange || !range) return initValue;
 
   preCaretRange.selectNodeContents(element);
   preCaretRange.setEnd(range.endContainer, range.endOffset);
-  return preCaretRange.toString().length;
+
+  const isFirstLine = preCaretRange.endContainer === element.firstChild;
+  return {
+    caretPos: preCaretRange.toString().length,
+    isFirstLine,
+  };
 }
 
 export const checkEndCaretPos = (element: HTMLDivElement, caretPos: number) => {
@@ -98,10 +107,10 @@ export const setCaretPos = (element: HTMLDivElement) => {
   const range = document.createRange();
   const sel = window.getSelection();
 
-  const pos = getCaretPos(element);
-  if (!pos) return;
+  const { caretPos } = getCaretPos(element);
+  if (!caretPos) return;
 
-  range.setStart(element, pos);
+  range.setStart(element, caretPos);
   range.collapse(true);
   sel?.removeAllRanges();
   sel?.addRange(range);

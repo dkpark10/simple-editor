@@ -47,9 +47,9 @@ export default function Editor2() {
 
     const currentEditorElement = editorElementRef.current[editorElementRow];
     if (e.key === 'Backspace') {
-      const caretPos = getCaretPos(currentEditorElement);
+      const { caretPos, isFirstLine } = getCaretPos(currentEditorElement);
       /** @desc 커서가 첫 위치에서 백페스페이스 입력 시 */
-      if (caretPos <= 0) {
+      if (caretPos <= 0 && isFirstLine) {
         const currentElementText = currentEditorElement.innerText.split('\n');
         const firstLineContent = currentElementText[0];
 
