@@ -71,18 +71,18 @@ export const deleteMiddleContent = (contentText: Array<string>, middleRow: numbe
 /** @desc 커서 위치정보를 얻는 함수 */
 export const getCaretPos = (element: HTMLDivElement) => {
   if (typeof window === 'undefined' || !Object.prototype.hasOwnProperty.call(window, 'getSelection')) {
-    return;
+    return 0;
   }
 
   const selection = window.getSelection();
   /** @description 커서 포커스 없을 때 */
   if (selection?.type === 'None') {
-    return;
+    return 0;
   }
   const range = window.getSelection()?.getRangeAt(0);  
   const preCaretRange = range?.cloneRange();
   
-  if (!selection?.rangeCount || !preCaretRange || !range) return;
+  if (!selection?.rangeCount || !preCaretRange || !range) return 0;
 
   preCaretRange.selectNodeContents(element);
   preCaretRange.setEnd(range.endContainer, range.endOffset);
