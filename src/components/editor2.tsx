@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import React, {
   ReactNode,
   useEffect,
@@ -18,21 +19,33 @@ import { v4 as uuidv4 } from "uuid";
 import styles from "@/styles/editor.module.scss";
 
 interface EditorState {
-  id: number;
+  blockId: string;
   contentType: "text" | "component";
   content?: React.JSX.Element | string;
 }
 
-type KeyInputState = 'Enter' | 'ArrowUp' | 'ArrowDown' | 'Backspace' | '';
+interface TempImageProps {
+  id: string;
+  onDeleteClick: (id: string) => (e:React.MouseEvent<HTMLButtonElement>) => void;
+}
 
-function TempImage() {
-  return <img width="100%" src={sampleImage.src} />;
+function TempImage({ id, onDeleteClick }: TempImageProps) {
+  return (
+    <>
+      <button onClick={onDeleteClick(id)}>삭제</button>
+      <img
+        width="100%"
+        alt="img"
+        src={sampleImage.src}
+      />
+    </>
+  );
 }
 
 export default function Editor2() {
-  const [editorBlock, setEditorBlock] = useState<ReadonlyArray<EditorState>>([
+  const [editorBlock, setEditorBlock] = useState<Array<EditorState>>([
     {
-      id: 0,
+      blockId: `${uuidv4()}-id-0`,
       contentType: "text",
       content: undefined,
     },
@@ -77,22 +90,41 @@ export default function Editor2() {
       }
     }
   };
-
-  const onClick = (imgCount = 1) => () => {
-    setEditorElementRow(prev => prev + imgCount + 1);
-    setEditorBlock((prev) => [
-      ...prev, 
-      ...Array.from({ length: imgCount }, (_, idx): EditorState => ({
-        id: prev.length + idx,
-        contentType: "component",
-        content: <TempImage key={prev.length + idx} />,
-      })),
-      {
-        id: prev.length + imgCount,
-        contentType: "text",
-      }
-    ]);
+  
+  const onDeleteClick = (idx: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
+    setEditorBlock((prev) => prev.filter(({ blockId }) => blockId !== idx));
+    setEditorElementRow(0);
   };
+
+  const onClick =
+    (imgCount = 1) =>
+    () => {
+      setEditorElementRow((prev) => prev + imgCount + 1);
+      setEditorBlock((prev) => {
+        const id = uuidv4();
+        return [
+          ...prev,
+          ...Array.from(
+            { length: imgCount },
+            (_, idx): EditorState => ({
+              blockId: id + `-id-${prev.length + idx}`,
+              contentType: "component",
+              content: (
+                <TempImage
+                  key={idx}
+                  id={id + `-id-${prev.length + idx}`}
+                  onDeleteClick={onDeleteClick}
+                />
+              ),
+            })
+          ),
+          {
+            blockId: id + `-id-${prev.length + imgCount}`,
+            contentType: "text",
+          },
+        ];
+      });
+    };
 
   useEffect(() => {
     if (editorBlock[editorElementRow].contentType === 'component') {
@@ -103,7 +135,6 @@ export default function Editor2() {
       editorElementRef.current[editorElementRow].focus();
       setLastPosCaret(editorElementRef.current[editorElementRow]);
     }, 0)
-
   }, [editorBlock, editorElementRow]);
 
   return (
@@ -117,12 +148,12 @@ export default function Editor2() {
             여러장 렌더링
           </button>
         </div>
-        {editorBlock.map(({ content, id, contentType }, idx) => {
+        {editorBlock.map(({ content, blockId, contentType }, idx) => {
           if (contentType === "text") {
             return (
               <div
-                className={[styles["content"], id].join(" ")}
-                key={id}
+                className={[styles["content"], blockId].join(" ")}
+                key={blockId}
                 contentEditable
                 ref={(element) => {
                   if (!element) return;

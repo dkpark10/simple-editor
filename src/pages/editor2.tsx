@@ -1,4 +1,8 @@
-import Editor2 from '@/components/editor2';
+import dynamic from 'next/dynamic';
+
+const Editor2 = dynamic(() => import('@/components/editor2'), {
+  ssr: false,
+});
 
 const initHtml = `
 <div><button class="editor_test-btn__ra2yx">한장 렌더링</button><button class="editor_test-btn__ra2yx">
