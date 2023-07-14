@@ -45,7 +45,7 @@ export default function Editor() {
   const contentTextRef = useRef<Array<string>>([]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    contentTextRef.current[currentRow] = e.currentTarget.textContent || "";
+    contentTextRef.current[currentRow] = e.currentTarget.innerText || "";
     const isEndBlock = currentRow >= editorBlock.length - 1;
 
     if (e.key === "Enter") {

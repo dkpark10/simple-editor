@@ -43,17 +43,33 @@ export default function Editor2() {
   const editorElementRef = useRef<Array<HTMLDivElement>>([]);
 
   const onKeyDown = (idx: number) => (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const currentEditorElement = editorElementRef.current[editorElementRow];
+    if (idx <= 0) return;
 
+    const currentEditorElement = editorElementRef.current[editorElementRow];
     if (e.key === 'Backspace') {
       const caretPos = getCaretPos(currentEditorElement);
-      /** @desc 커서가 첫 위치에서 백페스페이스 입력 시  */
+      /** @desc 커서가 첫 위치에서 백페스페이스 입력 시 */
       if (caretPos <= 0) {
-        const firstLineContent = currentEditorElement.innerText.split('\n')[0];
-      
-      }
-    } else if(e.key === 'Enter') {
+        const currentElementText = currentEditorElement.innerText.split('\n');
+        const firstLineContent = currentElementText[0];
 
+        currentEditorElement.innerText = currentElementText
+          .slice(1)
+          .map((text) => `${text}\n`)
+          .join(" ");
+
+        const prevContentBlockType = editorBlock[idx - 1].contentType;
+        let nextRow;
+
+        if (prevContentBlockType === 'component') {
+          nextRow = editorElementRow - 2;
+        } else {
+          nextRow = editorElementRow - 1;
+        }
+
+        editorElementRef.current[nextRow].innerText += firstLineContent;
+        setEditorElementRow(nextRow);
+      }
     }
   };
 
@@ -74,8 +90,16 @@ export default function Editor2() {
   };
 
   useEffect(() => {
-    editorElementRef.current[editorElementRow].focus();
-  }, [editorElementRow]);
+    if (editorBlock[editorElementRow].contentType === 'component') {
+      return;
+    }
+
+    setTimeout(() => {
+      editorElementRef.current[editorElementRow].focus();
+      setLastPosCaret(editorElementRef.current[editorElementRow]);
+    }, 0)
+
+  }, [editorBlock, editorElementRow]);
 
   return (
     <>
