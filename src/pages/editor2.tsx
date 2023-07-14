@@ -43,10 +43,10 @@ export default function Editor2() {
   const editorElementRef = useRef<Array<HTMLDivElement>>([]);
 
   const onKeyDown = (idx: number) => (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (idx <= 0) return;
-
     const currentEditorElement = editorElementRef.current[editorElementRow];
+
     if (e.key === 'Backspace') {
+      if (idx <= 0) return;
       const { caretPos, isFirstLine } = getCaretPos(currentEditorElement);
       /** @desc 커서가 첫 위치에서 백페스페이스 입력 시 */
       if (caretPos <= 0 && isFirstLine) {
@@ -70,23 +70,24 @@ export default function Editor2() {
         editorElementRef.current[nextRow].innerText += firstLineContent;
         setEditorElementRow(nextRow);
       }
+    } else if (e.key === "Enter") {
     }
   };
 
-  const onClick = () => {
-    setEditorElementRow(prev => prev + 2);
+  const onClick = (imgCount = 1) => () => {
+    setEditorElementRow(prev => prev + imgCount + 1);
     setEditorBlock((prev) => [
       ...prev, 
+      ...Array.from({ length: imgCount }, (_, idx): EditorState => ({
+        id: prev.length + idx,
+        contentType: "component",
+        content: <TempImage key={prev.length + idx} />,
+      })),
       {
-        id: prev.length,
-        contentType: 'component',
-        content: <TempImage key={prev.length} />
-      },
-      {
-        id: prev.length + 1,
-        contentType: 'text',
+        id: prev.length + imgCount,
+        contentType: "text",
       }
-    ])
+    ]);
   };
 
   useEffect(() => {
@@ -101,12 +102,18 @@ export default function Editor2() {
 
   }, [editorBlock, editorElementRow]);
 
+  console.log(editorBlock);
   return (
     <>
       <main className={styles["container"]}>
-        <button className={styles["test-btn"]} onClick={onClick}>
-          클릭
-        </button>
+        <div className={styles["btn-container"]}>
+          <button className={styles["test-btn"]} onClick={onClick()}>
+            한장 렌더링
+          </button>
+          <button className={styles["test-btn"]} onClick={onClick(3)}>
+            여러장 렌더링
+          </button>
+        </div>
         {editorBlock.map(({ content, id, contentType }, idx) => {
           if (contentType === "text") {
             return (
