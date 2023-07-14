@@ -49,6 +49,9 @@ export default function Editor2() {
       if (idx <= 0) return;
       const { caretPos, isFirstLine } = getCaretPos(currentEditorElement);
       /** @desc 커서가 첫 위치에서 백페스페이스 입력 시 */
+
+      console.log("??", caretPos, isFirstLine);
+
       if (caretPos <= 0 && isFirstLine) {
         const currentElementText = currentEditorElement.innerText.split('\n');
         const firstLineContent = currentElementText[0];
@@ -102,7 +105,6 @@ export default function Editor2() {
 
   }, [editorBlock, editorElementRow]);
 
-  console.log(editorBlock);
   return (
     <>
       <main className={styles["container"]}>
