@@ -50,8 +50,6 @@ export default function Editor2() {
       const { caretPos, isFirstLine } = getCaretPos(currentEditorElement);
       /** @desc 커서가 첫 위치에서 백페스페이스 입력 시 */
 
-      console.log("??", caretPos, isFirstLine);
-
       if (caretPos <= 0 && isFirstLine) {
         const currentElementText = currentEditorElement.innerText.split('\n');
         const firstLineContent = currentElementText[0];
@@ -61,11 +59,16 @@ export default function Editor2() {
           .map((text) => `${text}\n`)
           .join(" ");
 
-        const prevContentBlockType = editorBlock[idx - 1].contentType;
-        let nextRow;
+        let nextRow: number = idx - 1;
+        const prevContentBlockType = editorBlock[nextRow].contentType;
 
         if (prevContentBlockType === 'component') {
-          nextRow = editorElementRow - 2;
+          let nextIdx = idx - 1;
+          while (editorBlock[nextIdx].contentType !== 'text') {
+            nextIdx -= 1;
+            nextRow = nextIdx;
+          }
+          console.log(nextRow);
         } else {
           nextRow = editorElementRow - 1;
         }
