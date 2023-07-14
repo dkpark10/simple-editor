@@ -1,9 +1,11 @@
 import dynamic from "next/dynamic";
- 
-const Editor = dynamic(() => import("@/components/editor"), {
-  ssr: false,
-});
+import Link from "next/link";
 
 export default function EditorPage() {
-  return <Editor />;
+  return (
+    <>
+      <Link href="/poll">poll</Link>
+      <Link href="/chart">chart</Link>
+    </>
+  )
 }
