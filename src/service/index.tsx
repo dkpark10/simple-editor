@@ -91,7 +91,7 @@ export const getCaretPos = (element: HTMLDivElement) => {
   preCaretRange.selectNodeContents(element);
   preCaretRange.setEnd(range.endContainer, range.endOffset);
 
-  const isFirstLine = preCaretRange.endContainer === element;
+  const isFirstLine = preCaretRange.endOffset === 0;
   return {
     caretPos: preCaretRange.toString().length,
     isFirstLine,

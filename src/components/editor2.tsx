@@ -68,7 +68,6 @@ export default function Editor2() {
             nextIdx -= 1;
             nextRow = nextIdx;
           }
-          console.log(nextRow);
         } else {
           nextRow = editorElementRow - 1;
         }
@@ -76,7 +75,6 @@ export default function Editor2() {
         editorElementRef.current[nextRow].innerText += firstLineContent;
         setEditorElementRow(nextRow);
       }
-    } else if (e.key === "Enter") {
     }
   };
 
