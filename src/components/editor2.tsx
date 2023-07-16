@@ -134,7 +134,10 @@ export default function Editor2() {
 
   return (
     <>
-      <main className={styles["container"]}>
+      <main
+        onClick={() => editorElementRef.current[editorElementRow].focus()}
+        className={styles["container"]}
+      >
         <div className={styles["btn-container"]}>
           <button className={styles["test-btn"]} onClick={onClick()}>
             한장 렌더링
