@@ -21,23 +21,22 @@ import styles from "@/styles/editor.module.scss";
 interface EditorState {
   blockId: string;
   contentType: "text" | "component";
-  content?: React.JSX.Element | string;
+  src?: string;
 }
 
 interface TempImageProps {
   id: string;
-  onDeleteClick: (id: string) => (e:React.MouseEvent<HTMLButtonElement>) => void;
+  src: string;
+  onDeleteClick: (
+    id: string
+  ) => (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-function TempImage({ id, onDeleteClick }: TempImageProps) {
+function TempImage({ id, onDeleteClick, src }: TempImageProps) {
   return (
     <>
       <button onClick={onDeleteClick(id)}>삭제</button>
-      <img
-        width="100%"
-        alt="img"
-        src={sampleImage.src}
-      />
+      <img width="100%" alt="img" src={src} />
     </>
   );
 }
@@ -47,7 +46,6 @@ export default function Editor2() {
     {
       blockId: `${uuidv4()}-id-0`,
       contentType: "text",
-      content: undefined,
     },
   ]);
 
@@ -55,46 +53,49 @@ export default function Editor2() {
 
   const editorElementRef = useRef<Array<HTMLDivElement>>([]);
 
-  const onKeyDown = (idx: number) => (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const currentEditorElement = editorElementRef.current[editorElementRow];
+  const onKeyDown =
+    (idx: number) => (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const currentEditorElement = editorElementRef.current[editorElementRow];
 
-    if (e.key === 'Backspace') {
-      if (idx <= 0) return;
-      const { caretPos, isFirstLine } = getCaretPos(currentEditorElement);
-      /** @desc 커서가 첫 위치에서 백페스페이스 입력 시 */
+      if (e.key === "Backspace") {
+        if (idx <= 0) return;
+        const { caretPos, isFirstLine } = getCaretPos(currentEditorElement);
+        /** @desc 커서가 첫 위치에서 백페스페이스 입력 시 */
 
-      if (caretPos <= 0 && isFirstLine) {
-        const currentElementText = currentEditorElement.innerText.split('\n');
-        const firstLineContent = currentElementText[0];
+        if (caretPos <= 0 && isFirstLine) {
+          const currentElementText = currentEditorElement.innerText.split("\n");
+          const firstLineContent = currentElementText[0];
 
-        currentEditorElement.innerText = currentElementText
-          .slice(1)
-          .map((text) => `${text}\n`)
-          .join(" ");
+          currentEditorElement.innerText = currentElementText
+            .slice(1)
+            .map((text) => `${text}\n`)
+            .join(" ");
 
-        let nextRow: number = idx - 1;
-        const prevContentBlockType = editorBlock[nextRow].contentType;
+          let nextRow: number = idx - 1;
+          const prevContentBlockType = editorBlock[nextRow].contentType;
 
-        if (prevContentBlockType === 'component') {
-          let nextIdx = idx - 1;
-          while (editorBlock[nextIdx].contentType !== 'text') {
-            nextIdx -= 1;
-            nextRow = nextIdx;
+          if (prevContentBlockType === "component") {
+            let nextIdx = idx - 1;
+            while (editorBlock[nextIdx].contentType !== "text") {
+              nextIdx -= 1;
+              nextRow = nextIdx;
+            }
+          } else {
+            nextRow = editorElementRow - 1;
           }
-        } else {
-          nextRow = editorElementRow - 1;
-        }
 
-        editorElementRef.current[nextRow].innerText += firstLineContent;
-        setEditorElementRow(nextRow);
+          editorElementRef.current[nextRow].innerText += firstLineContent;
+          setEditorElementRow(nextRow);
+        }
       }
-    }
-  };
-  
-  const onDeleteClick = (idx: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
-    setEditorBlock((prev) => prev.filter(({ blockId }) => blockId !== idx));
-    setEditorElementRow(0);
-  };
+    };
+
+  const onDeleteClick =
+    (idx: string) => (e: React.MouseEvent<HTMLButtonElement>) => {
+      console.log(editorBlock);
+      setEditorBlock((prev) => prev.filter(({ blockId }) => blockId !== idx));
+      setEditorElementRow(0);
+    };
 
   const onClick =
     (imgCount = 1) =>
@@ -109,13 +110,7 @@ export default function Editor2() {
             (_, idx): EditorState => ({
               blockId: id + `-id-${prev.length + idx}`,
               contentType: "component",
-              content: (
-                <TempImage
-                  key={idx}
-                  id={id + `-id-${prev.length + idx}`}
-                  onDeleteClick={onDeleteClick}
-                />
-              ),
+              src: sampleImage.src,
             })
           ),
           {
@@ -127,14 +122,14 @@ export default function Editor2() {
     };
 
   useEffect(() => {
-    if (editorBlock[editorElementRow].contentType === 'component') {
+    if (editorBlock[editorElementRow].contentType === "component") {
       return;
     }
 
     setTimeout(() => {
       editorElementRef.current[editorElementRow].focus();
       setLastPosCaret(editorElementRef.current[editorElementRow]);
-    }, 0)
+    }, 0);
   }, [editorBlock, editorElementRow]);
 
   return (
@@ -148,7 +143,7 @@ export default function Editor2() {
             여러장 렌더링
           </button>
         </div>
-        {editorBlock.map(({ content, blockId, contentType }, idx) => {
+        {editorBlock.map(({ src, blockId, contentType }, idx) => {
           if (contentType === "text") {
             return (
               <div
@@ -164,7 +159,14 @@ export default function Editor2() {
               />
             );
           } else {
-            return content;
+            return (
+              <TempImage
+                key={idx}
+                id={blockId}
+                onDeleteClick={onDeleteClick}
+                src={src as string}
+              />
+            );
           }
         })}
       </main>
